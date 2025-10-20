@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<!DOCTYPE suppressions PUBLIC
+        "-//Checkstyle//DTD SuppressionFilter Configuration 1.2//EN"
+        "https://checkstyle.org/dtds/suppressions_1_2.dtd">
+
+<suppressions>
+    <!-- Suprimir validaciones de visibilidad en clases con Lombok -->
+    <suppress checks="VisibilityModifier" files=".*[\\/]dto[\\/].*\.java"/>
+    <suppress checks="VisibilityModifier" files=".*[\\/]model[\\/].*\.java"/>
+
+    <!-- Suprimir validaciones de JavaDoc -->
+    <suppress checks="JavadocMethod" files=".*"/>
+    <suppress checks="JavadocType" files=".*"/>
+    <suppress checks="JavadocVariable" files=".*"/>
+
+    <!-- Suprimir en archivos de test -->
+    <suppress checks="MagicNumber" files=".*[\\/]test[\\/].*\.java"/>
+    <suppress checks="MethodLength" files=".*[\\/]test[\\/].*\.java"/>
+</suppressions>

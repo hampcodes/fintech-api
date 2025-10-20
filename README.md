@@ -260,6 +260,97 @@ mvn clean test jacoco:report
 
 Para más información sobre la metodología de testing, consultar [TEST.md](TEST.md).
 
+## CI/CD y Calidad de Código
+
+El proyecto utiliza GitHub Actions para automatizar la integración continua y análisis de calidad.
+
+### Workflows Configurados
+
+#### 1. CI - Build & Test (`.github/workflows/ci.yml`)
+
+Se ejecuta automáticamente en cada push o pull request a las ramas `main` y `develop`.
+
+**Funcionalidad:**
+- Configura PostgreSQL como servicio para tests de integración
+- Compila el proyecto con Maven
+- Ejecuta todos los tests (32 tests unitarios e integración)
+- Genera artefacto JAR de la aplicación
+- Comenta resultados en pull requests
+
+**Ejecutar localmente:**
+```bash
+mvn clean compile
+mvn test
+mvn package -DskipTests
+```
+
+#### 2. Code Quality Analysis (`.github/workflows/code-quality.yml`)
+
+Análisis automático de calidad de código en cada push o pull request.
+
+**Herramientas integradas:**
+- **JaCoCo**: Cobertura de código (mínimo 70%)
+- **Checkstyle**: Validación de estilo y convenciones Java
+- **SpotBugs**: Detección automática de bugs
+
+**Ejecutar localmente:**
+```bash
+# Reporte de cobertura
+mvn clean test jacoco:report
+
+# Ver reporte HTML
+open target/site/jacoco/index.html
+
+# Checkstyle
+mvn checkstyle:check
+
+# SpotBugs
+mvn spotbugs:check
+```
+
+### Configuración de Calidad
+
+#### JaCoCo Coverage
+- Umbral mínimo: 70% de cobertura de líneas
+- Reportes generados en: `target/site/jacoco/`
+- Configuración: `pom.xml` (líneas 103-143)
+
+#### Checkstyle
+- Basado en Google Java Style Guide
+- Configuración: `checkstyle.xml`
+- Supresiones: `checkstyle-suppressions.xml`
+- Validaciones principales:
+  - Convenciones de nombres
+  - Longitud de métodos (max 150 líneas)
+  - Longitud de líneas (max 120 caracteres)
+  - Complejidad ciclomática (max 15)
+  - Imports y espacios en blanco
+
+#### SpotBugs
+- Nivel de esfuerzo: Máximo
+- Threshold: Low (detecta todos los bugs)
+- Reportes XML en: `target/spotbugsXml.xml`
+
+### Badges de Estado
+
+Puedes agregar badges al README después del primer workflow exitoso:
+
+```markdown
+![CI](https://github.com/tu-usuario/fintech-api/workflows/CI%20-%20Build%20%26%20Test/badge.svg)
+![Code Quality](https://github.com/tu-usuario/fintech-api/workflows/Code%20Quality%20Analysis/badge.svg)
+```
+
+### Integración con SonarCloud (Opcional)
+
+Para habilitar análisis con SonarCloud:
+
+1. Crear cuenta en [sonarcloud.io](https://sonarcloud.io)
+2. Agregar el proyecto y obtener token
+3. Agregar secrets en GitHub:
+   - `SONAR_TOKEN`: Token de SonarCloud
+4. Descomentar sección SonarCloud en `.github/workflows/code-quality.yml`
+5. Actualizar `projectKey` y `organization` en el workflow
+
 ## Documentación Adicional
 
 ### Swagger Documentation
