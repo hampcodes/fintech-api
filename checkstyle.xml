@@ -23,6 +23,12 @@
         <property name="lineSeparator" value="lf"/>
     </module>
 
+    <!-- Longitud de línea (debe estar fuera de TreeWalker) -->
+    <module name="LineLength">
+        <property name="max" value="120"/>
+        <property name="ignorePattern" value="^package.*|^import.*|a href|href|http://|https://|ftp://"/>
+    </module>
+
     <module name="TreeWalker">
         <!-- Imports -->
         <module name="AvoidStarImport"/>
@@ -47,10 +53,6 @@
         </module>
         <module name="ParameterNumber">
             <property name="max" value="7"/>
-        </module>
-        <module name="LineLength">
-            <property name="max" value="120"/>
-            <property name="ignorePattern" value="^package.*|^import.*|a href|href|http://|https://|ftp://"/>
         </module>
 
         <!-- Espacios en blanco -->
@@ -113,7 +115,7 @@
 
     <!-- Suprimir warnings en clases con Lombok -->
     <module name="SuppressionFilter">
-        <property name="file" value="${config_loc}/checkstyle-suppressions.xml" default="checkstyle-suppressions.xml"/>
+        <property name="file" value="checkstyle-suppressions.xml"/>
         <property name="optional" value="true"/>
     </module>
 </module>
