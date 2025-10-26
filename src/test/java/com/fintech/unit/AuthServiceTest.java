@@ -113,7 +113,7 @@ class AuthServiceTest {
         Customer savedCustomer = createMockCustomer("customer-001", savedUser, "John Doe");
         when(customerRepository.save(any(Customer.class))).thenReturn(savedCustomer);
 
-        when(jwtUtil.generateToken("john@example.com")).thenReturn("fake-jwt-token");
+        when(jwtUtil.generateToken("john@example.com", "John Doe", "customer-001")).thenReturn("fake-jwt-token");
 
         // Act
         AuthResponse response = authService.register(request);
@@ -184,7 +184,7 @@ class AuthServiceTest {
         Customer customer = createMockCustomer("customer-001", user, "John Doe");
         when(customerRepository.findByUserId("user-001")).thenReturn(Optional.of(customer));
 
-        when(jwtUtil.generateToken("john@example.com")).thenReturn("fake-jwt-token");
+        when(jwtUtil.generateToken("john@example.com", "John Doe", "customer-001")).thenReturn("fake-jwt-token");
 
         // Act
         AuthResponse response = authService.login(request);

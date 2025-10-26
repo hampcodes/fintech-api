@@ -27,7 +27,7 @@ Esta guía documenta la estrategia de testing unitario implementada en el proyec
 
 ### Estadísticas Actuales
 
-- **Total de tests**: 22 tests
+- **Total de tests**: 22 tests (4 AuthService + 9 AccountService + 9 TransactionService)
 - **Cobertura**: >70% de líneas de código
 - **Framework**: JUnit 5 + Mockito + AssertJ
 - **Tiempo de ejecución**: ~2 segundos
@@ -81,9 +81,39 @@ Crear Cuenta → Account asociada al Customer del User autenticado
 src/test/java/com/fintech/
 └── unit/
     ├── AuthServiceTest.java       (4 tests)
-    ├── AccountServiceTest.java    (10 tests)
-    └── TransactionServiceTest.java (8 tests)
+    ├── AccountServiceTest.java    (9 tests)
+    └── TransactionServiceTest.java (9 tests)
 ```
+
+### Tests Detallados
+
+#### AuthServiceTest (4 tests)
+1. ✅ `register_ValidData_Success` - Registro exitoso con User + Customer
+2. ✅ `register_DuplicateEmail_ThrowsException` - Email duplicado
+3. ✅ `register_RoleNotFound_ThrowsException` - Rol no encontrado
+4. ✅ `login_ValidCredentials_Success` - Login exitoso
+
+#### AccountServiceTest (9 tests)
+1. ✅ `createAccount_ValidData_Success` - Crear cuenta exitosamente
+2. ✅ `createAccount_DuplicateAccountNumber_ThrowsException` - Número de cuenta duplicado
+3. ✅ `getAccountById_ValidId_Success` - Obtener cuenta por ID
+4. ✅ `getAccountById_NonExistentId_ThrowsException` - ID no existe
+5. ✅ `getAllAccounts_UserHasAccounts_Success` - Listar todas las cuentas del usuario
+6. ✅ `getActiveAccounts_FilterByActive_Success` - Listar solo cuentas activas
+7. ✅ `deactivateAccount_ValidId_Success` - Desactivar cuenta
+8. ✅ `activateAccount_ValidId_Success` - Activar cuenta
+9. ✅ `getBalance_ValidAccountNumber_Success` - Obtener saldo de cuenta
+
+#### TransactionServiceTest (9 tests)
+1. ✅ `createTransaction_Deposit_Success` - Crear depósito exitosamente
+2. ✅ `createTransaction_Withdrawal_Success` - Crear retiro exitosamente
+3. ✅ `createTransaction_AccountNotFound_ThrowsException` - Cuenta inexistente
+4. ✅ `createTransaction_InactiveAccount_ThrowsException` - Cuenta inactiva
+5. ✅ `createTransaction_InsufficientFunds_ThrowsException` - Saldo insuficiente
+6. ✅ `getTransactionById_ValidId_Success` - Obtener transacción por ID
+7. ✅ `getTransactionById_NonExistentId_ThrowsException` - ID no existe
+8. ✅ `getAllTransactions_Success` - Listar todas las transacciones
+9. ✅ `getTransactionsByAccountNumber_Success` - Filtrar por número de cuenta
 
 ### Convenciones de Nomenclatura
 
@@ -209,7 +239,7 @@ void register_ValidData_Success() {
     Customer savedCustomer = createMockCustomer("customer-001", savedUser, "John Doe");
     when(customerRepository.save(any(Customer.class))).thenReturn(savedCustomer);
 
-    when(jwtUtil.generateToken("john@example.com")).thenReturn("fake-jwt-token");
+    when(jwtUtil.generateToken("john@example.com", "John Doe", "customer-001")).thenReturn("fake-jwt-token");
 
     // Act
     AuthResponse response = authService.register(request);
@@ -230,7 +260,7 @@ void register_ValidData_Success() {
 - ✅ Se crea el User con password encriptada
 - ✅ Se crea el Customer asociado al User
 - ✅ Se asigna el rol ROLE_USER por defecto
-- ✅ Se genera un token JWT válido
+- ✅ Se genera un token JWT con email, nombre y customerId
 - ✅ El response contiene token, email y nombre
 
 #### 2. Login con Datos de Customer
@@ -254,7 +284,7 @@ void login_ValidCredentials_Success() {
     Customer customer = createMockCustomer("customer-001", user, "John Doe");
     when(customerRepository.findByUserId("user-001")).thenReturn(Optional.of(customer));
 
-    when(jwtUtil.generateToken("john@example.com")).thenReturn("fake-jwt-token");
+    when(jwtUtil.generateToken("john@example.com", "John Doe", "customer-001")).thenReturn("fake-jwt-token");
 
     // Act
     AuthResponse response = authService.login(request);
@@ -271,12 +301,12 @@ void login_ValidCredentials_Success() {
 
 ### Resumen de Tests de AuthService
 
-| Test | Escenario | Cambios con Customer |
+| Test | Escenario | Verificaciones Clave |
 |------|-----------|---------------------|
-| `register_ValidData_Success` | Datos válidos | ✅ Verifica creación de Customer |
-| `register_DuplicateEmail_ThrowsException` | Email duplicado | Sin cambios |
-| `register_RoleNotFound_ThrowsException` | Rol no existe | Sin cambios |
-| `login_ValidCredentials_Success` | Credenciales correctas | ✅ Busca Customer para nombre |
+| `register_ValidData_Success` | Datos válidos | ✅ Crea User + Customer<br>✅ JWT con email, name, customerId |
+| `register_DuplicateEmail_ThrowsException` | Email duplicado | ✅ Lanza DuplicateEmailException |
+| `register_RoleNotFound_ThrowsException` | Rol no existe | ✅ Lanza RoleNotFoundException |
+| `login_ValidCredentials_Success` | Credenciales correctas | ✅ Busca Customer<br>✅ JWT con email, name, customerId |
 
 **Total**: 4 tests ✅
 
@@ -411,14 +441,19 @@ void createAccount_ValidData_Success() {
 
 ### Resumen de Tests de AccountService
 
-**Total**: 10 tests ✅
+| Test | Descripción |
+|------|-------------|
+| `createAccount_ValidData_Success` | ✅ Crea cuenta asociada al Customer |
+| `createAccount_DuplicateAccountNumber_ThrowsException` | ✅ Rechaza número duplicado |
+| `getAccountById_ValidId_Success` | ✅ Obtiene cuenta con ownership validation |
+| `getAccountById_NonExistentId_ThrowsException` | ✅ Lanza AccountNotFoundException |
+| `getAllAccounts_UserHasAccounts_Success` | ✅ Lista solo cuentas del usuario autenticado |
+| `getActiveAccounts_FilterByActive_Success` | ✅ Filtra solo cuentas activas |
+| `deactivateAccount_ValidId_Success` | ✅ Desactiva cuenta exitosamente |
+| `activateAccount_ValidId_Success` | ✅ Activa cuenta exitosamente |
+| `getBalance_ValidAccountNumber_Success` | ✅ Retorna saldo correcto |
 
-- Creación de cuenta
-- Validación de número duplicado
-- Obtención por ID con ownership validation
-- Listado de cuentas (solo del usuario autenticado)
-- Activación/desactivación de cuentas
-- Consulta de saldo
+**Total**: 9 tests ✅
 
 ---
 
@@ -495,16 +530,19 @@ void createTransaction_Deposit_Success() {
 
 ### Resumen de Tests de TransactionService
 
-**Total**: 8 tests ✅
+| Test | Descripción |
+|------|-------------|
+| `createTransaction_Deposit_Success` | ✅ Crea depósito y actualiza saldo |
+| `createTransaction_Withdrawal_Success` | ✅ Crea retiro y actualiza saldo |
+| `createTransaction_AccountNotFound_ThrowsException` | ✅ Rechaza cuenta inexistente |
+| `createTransaction_InactiveAccount_ThrowsException` | ✅ Rechaza cuenta inactiva |
+| `createTransaction_InsufficientFunds_ThrowsException` | ✅ Rechaza retiro con saldo insuficiente |
+| `getTransactionById_ValidId_Success` | ✅ Obtiene transacción por ID |
+| `getTransactionById_NonExistentId_ThrowsException` | ✅ Lanza TransactionNotFoundException |
+| `getAllTransactions_Success` | ✅ Lista todas las transacciones |
+| `getTransactionsByAccountNumber_Success` | ✅ Filtra transacciones por cuenta |
 
-- Depósito exitoso
-- Retiro exitoso
-- Retiro con saldo insuficiente
-- Operación en cuenta inexistente
-- Operación en cuenta inactiva
-- Obtención de transacción por ID
-- Listado de todas las transacciones
-- Filtrado por número de cuenta
+**Total**: 9 tests ✅
 
 ---
 
@@ -826,20 +864,22 @@ mvn test -X
 
 ## Conclusión
 
-Los tests unitarios refactorizados ahora reflejan correctamente la arquitectura Customer-Account:
+Los tests unitarios refactorizados reflejan correctamente la arquitectura Customer-Account y la implementación de JWT con claims personalizados:
 
-- ✅ **22 tests** en total (4 AuthService + 10 AccountService + 8 TransactionService)
+- ✅ **22 tests** en total (4 AuthService + 9 AccountService + 9 TransactionService)
 - ✅ Cobertura del **75-80%**
 - ✅ **30% menos código** gracias a helpers
 - ✅ **Arquitectura Customer** completamente probada
-- ✅ Patrón AAA consistente
-- ✅ Mocks apropiados de todas las dependencias
+- ✅ **JWT con claims personalizados** (email, name, customerId) completamente probado
+- ✅ Patrón AAA consistente en todos los tests
+- ✅ Mocks apropiados de todas las dependencias (incluyendo CustomerRepository)
 - ✅ Verificación de casos exitosos y de error
 - ✅ Ownership validation cubierta
+- ✅ Helper methods para reducir duplicación
 
 **Recuerda**: Un buen test es aquel que falla cuando el código cambia de forma incorrecta, pero pasa cuando el código funciona correctamente.
 
 ---
 
-**Última actualización**: 25 de Octubre, 2025
-**Versión**: 2.0.0 (Customer Architecture)
+**Última actualización**: 26 de Octubre, 2025
+**Versión**: 2.1.0 (Customer Architecture + JWT Claims)
