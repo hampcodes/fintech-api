@@ -1,0 +1,1748 @@
+{
+	"info": {
+		"_postman_id": "fintech-api-collection-2025",
+		"name": "Fintech API - Complete Collection",
+		"description": "Collection completa de endpoints para la API de Fintech. Incluye autenticación JWT, gestión de clientes, cuentas bancarias, transacciones financieras y administración del sistema.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "fintech-api"
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Register User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Response has token\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('token');",
+									"    pm.expect(jsonData).to.have.property('email');",
+									"    pm.expect(jsonData).to.have.property('name');",
+									"});",
+									"",
+									"// Save JWT token for future requests",
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"jwtToken\", jsonData.token);",
+									"    pm.environment.set(\"userEmail\", jsonData.email);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"user@example.com\",\n    \"password\": \"password123\",\n    \"name\": \"John Doe\",\n    \"phone\": \"+1234567890\",\n    \"dni\": \"12345678A\",\n    \"address\": \"123 Main St, New York, NY 10001\",\n    \"dateOfBirth\": \"1990-01-15\",\n    \"nationality\": \"USA\",\n    \"occupation\": \"Software Engineer\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
+						},
+						"description": "Registra un nuevo usuario en el sistema con datos completos de Customer (User + Customer en una sola petición) y retorna un token JWT. IMPORTANTE: Solo email, password y name son obligatorios. Los campos phone, dni, address, dateOfBirth, nationality y occupation son opcionales."
+					},
+					"response": []
+				},
+				{
+					"name": "Login User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has authentication data\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('token');",
+									"    pm.expect(jsonData).to.have.property('email');",
+									"    pm.expect(jsonData).to.have.property('name');",
+									"});",
+									"",
+									"// Save JWT token for future requests",
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"jwtToken\", jsonData.token);",
+									"    pm.environment.set(\"userEmail\", jsonData.email);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"user@example.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						},
+						"description": "Autentica un usuario existente y retorna un token JWT"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints de autenticación y registro de usuarios con JWT"
+		},
+		{
+			"name": "Customer Profile",
+			"item": [
+				{
+					"name": "Get My Profile",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Profile has customer data\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('id');",
+									"    pm.expect(jsonData).to.have.property('userId');",
+									"    pm.expect(jsonData).to.have.property('name');",
+									"    pm.expect(jsonData).to.have.property('kycStatus');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/customer/profile",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"customer",
+								"profile"
+							]
+						},
+						"description": "Obtiene el perfil del cliente autenticado con información KYC"
+					},
+					"response": []
+				},
+				{
+					"name": "Update My Profile",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Profile updated\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.name).to.eql(\"John Smith\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"John Smith\",\n    \"phone\": \"+1234567890\",\n    \"dni\": \"12345678A\",\n    \"address\": \"123 Main St, New York, NY\",\n    \"dateOfBirth\": \"1990-01-15\",\n    \"nationality\": \"USA\",\n    \"occupation\": \"Software Engineer\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/customer/profile",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"customer",
+								"profile"
+							]
+						},
+						"description": "Actualiza el perfil del cliente autenticado"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints para gestión del perfil de cliente (requiere autenticación con rol USER)"
+		},
+		{
+			"name": "Accounts",
+			"item": [
+				{
+					"name": "Create Account",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Response has account data\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('id');",
+									"    pm.expect(jsonData).to.have.property('accountNumber');",
+									"    pm.expect(jsonData).to.have.property('customerId');",
+									"    pm.expect(jsonData).to.have.property('customerName');",
+									"    pm.expect(jsonData).to.have.property('balance');",
+									"});",
+									"",
+									"// Save account ID for future requests",
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"accountId\", jsonData.id);",
+									"    pm.environment.set(\"accountNumber\", jsonData.accountNumber);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"accountNumber\": \"1234567890\",\n    \"initialBalance\": 1000.00\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/accounts",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"accounts"
+							]
+						},
+						"description": "Crea una nueva cuenta bancaria asociada al Customer del usuario autenticado"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All My Accounts",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is an array\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/accounts",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"accounts"
+							]
+						},
+						"description": "Obtiene solo las cuentas del usuario autenticado (con validación de ownership)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Account by ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Account has correct structure\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('id');",
+									"    pm.expect(jsonData).to.have.property('accountNumber');",
+									"    pm.expect(jsonData).to.have.property('customerId');",
+									"    pm.expect(jsonData).to.have.property('customerName');",
+									"    pm.expect(jsonData).to.have.property('balance');",
+									"    pm.expect(jsonData).to.have.property('active');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/accounts/{{accountId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"accounts",
+								"{{accountId}}"
+							]
+						},
+						"description": "Obtiene una cuenta por ID (solo si pertenece al usuario autenticado)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Account by Number",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/accounts/number/{{accountNumber}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"accounts",
+								"number",
+								"{{accountNumber}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Account Balance",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/accounts/number/{{accountNumber}}/balance",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"accounts",
+								"number",
+								"{{accountNumber}}",
+								"balance"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Active Accounts",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/accounts/active",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"accounts",
+								"active"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Activate Account",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/accounts/{{accountId}}/activate",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"accounts",
+								"{{accountId}}",
+								"activate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Deactivate Account",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/accounts/{{accountId}}/deactivate",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"accounts",
+								"{{accountId}}",
+								"deactivate"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints para gestión de cuentas bancarias del usuario autenticado (con validación de ownership)"
+		},
+		{
+			"name": "Transactions",
+			"item": [
+				{
+					"name": "Create Deposit",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"accountNumber\": \"{{accountNumber}}\",\n    \"type\": \"DEPOSIT\",\n    \"amount\": 500.00,\n    \"description\": \"Depósito de nómina\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/transactions",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"transactions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Withdrawal",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"accountNumber\": \"{{accountNumber}}\",\n    \"type\": \"WITHDRAW\",\n    \"amount\": 200.00,\n    \"description\": \"Retiro en cajero automático\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/transactions",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"transactions"
+							]
+						},
+						"description": "Realiza un retiro. Validaciones aplicadas:\n- Monto mínimo (MIN_TRANSACTION_AMOUNT, default: $1.00)\n- Monto máximo (MAX_TRANSACTION_AMOUNT, default: $100,000.00)\n- Límite diario de retiros (MAX_DAILY_WITHDRAWAL, default: $5,000.00)\n- Saldo suficiente en la cuenta"
+					},
+					"response": []
+				},
+				{
+					"name": "Test: Withdrawal Exceeding Daily Limit",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"accountNumber\": \"{{accountNumber}}\",\n    \"type\": \"WITHDRAW\",\n    \"amount\": 6000.00,\n    \"description\": \"Prueba de límite diario excedido\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/transactions",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"transactions"
+							]
+						},
+						"description": "Prueba de validación de límite diario. Si el límite es $5,000 y ya retiraste algo hoy, este request fallará con DailyLimitExceededException"
+					},
+					"response": []
+				},
+				{
+					"name": "Test: Transaction Below Minimum",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"accountNumber\": \"{{accountNumber}}\",\n    \"type\": \"DEPOSIT\",\n    \"amount\": 0.50,\n    \"description\": \"Prueba de monto mínimo\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/transactions",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"transactions"
+							]
+						},
+						"description": "Prueba de validación de monto mínimo. Fallará con InvalidTransactionAmountException si es menor que MIN_TRANSACTION_AMOUNT ($1.00 por defecto)"
+					},
+					"response": []
+				},
+				{
+					"name": "Test: Transaction Above Maximum",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"accountNumber\": \"{{accountNumber}}\",\n    \"type\": \"DEPOSIT\",\n    \"amount\": 150000.00,\n    \"description\": \"Prueba de monto máximo\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/transactions",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"transactions"
+							]
+						},
+						"description": "Prueba de validación de monto máximo. Fallará con InvalidTransactionAmountException si excede MAX_TRANSACTION_AMOUNT ($100,000.00 por defecto)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All My Transactions",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/transactions",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"transactions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Transaction by ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/transactions/{{transactionId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"transactions",
+								"{{transactionId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Transactions by Account",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/transactions/account/{{accountNumber}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"transactions",
+								"account",
+								"{{accountNumber}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints para gestión de transacciones financieras (solo del usuario autenticado)"
+		},
+		{
+			"name": "Admin - Users",
+			"item": [
+				{
+					"name": "Get All Users",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/admin/users",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"users"
+							]
+						},
+						"description": "Obtiene todos los usuarios del sistema (solo ADMIN)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get User by ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/admin/users/{{userId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"users",
+								"{{userId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Activate User",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/admin/users/{{userId}}/activate",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"users",
+								"{{userId}}",
+								"activate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Deactivate User",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/admin/users/{{userId}}/deactivate",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"users",
+								"{{userId}}",
+								"deactivate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update User Role",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"role\": \"ROLE_ADMIN\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin/users/{{userId}}/role",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"users",
+								"{{userId}}",
+								"role"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints de administración de usuarios (solo ADMIN, sin validación de ownership)"
+		},
+		{
+			"name": "Admin - Customers",
+			"item": [
+				{
+					"name": "Get All Customers",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/admin/customers",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"customers"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Customer by ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/admin/customers/{{customerId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"customers",
+								"{{customerId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update KYC Status",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"kycStatus\": \"VERIFIED\",\n    \"kycDocuments\": \"passport.pdf, utility_bill.pdf\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin/customers/{{customerId}}/kyc",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"customers",
+								"{{customerId}}",
+								"kyc"
+							]
+						},
+						"description": "Actualiza el estado KYC del cliente (PENDING, VERIFIED, REJECTED, REQUIRES_UPDATE)"
+					},
+					"response": []
+				},
+				{
+					"name": "Activate Customer",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/admin/customers/{{customerId}}/activate",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"customers",
+								"{{customerId}}",
+								"activate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Deactivate Customer",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/admin/customers/{{customerId}}/deactivate",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"customers",
+								"{{customerId}}",
+								"deactivate"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints de administración de clientes (solo ADMIN)"
+		},
+		{
+			"name": "Admin - Accounts",
+			"item": [
+				{
+					"name": "Get All Accounts",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/admin/accounts",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"accounts"
+							]
+						},
+						"description": "Obtiene TODAS las cuentas del sistema sin validación de ownership"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Account by ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/admin/accounts/{{accountId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"accounts",
+								"{{accountId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Activate Account",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/admin/accounts/{{accountId}}/activate",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"accounts",
+								"{{accountId}}",
+								"activate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Deactivate Account",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/admin/accounts/{{accountId}}/deactivate",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"accounts",
+								"{{accountId}}",
+								"deactivate"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints de administración de cuentas (solo ADMIN, acceso a TODAS las cuentas)"
+		},
+		{
+			"name": "Admin - Transactions",
+			"item": [
+				{
+					"name": "Get All Transactions",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/admin/transactions",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"transactions"
+							]
+						},
+						"description": "Obtiene TODAS las transacciones del sistema"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints de administración de transacciones (solo ADMIN)"
+		},
+		{
+			"name": "Admin - Reports",
+			"item": [
+				{
+					"name": "Get Dashboard Statistics",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Dashboard has all sections\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('userStatistics');",
+									"    pm.expect(jsonData).to.have.property('accountStatistics');",
+									"    pm.expect(jsonData).to.have.property('transactionStatistics');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/admin/reports/dashboard",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"reports",
+								"dashboard"
+							]
+						},
+						"description": "Dashboard completo con estadísticas de usuarios, cuentas y transacciones"
+					},
+					"response": []
+				},
+				{
+					"name": "Get User Statistics",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/admin/reports/users",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"reports",
+								"users"
+							]
+						},
+						"description": "Estadísticas de usuarios: total, activos, inactivos, por rol"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Account Statistics",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/admin/reports/accounts",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"reports",
+								"accounts"
+							]
+						},
+						"description": "Estadísticas de cuentas: total, activas, inactivas, balance total y promedio"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Transaction Statistics",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/admin/reports/transactions",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"reports",
+								"transactions"
+							]
+						},
+						"description": "Estadísticas de transacciones: total, depósitos, retiros, montos, flujo de caja neto"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints de reportes y estadísticas (solo ADMIN)"
+		},
+		{
+			"name": "Admin - Settings",
+			"item": [
+				{
+					"name": "Create Setting",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"settingKey\": \"MAX_DAILY_WITHDRAWAL\",\n    \"settingValue\": \"5000.00\",\n    \"description\": \"Monto máximo de retiro diario por cuenta\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin/settings",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"settings"
+							]
+						},
+						"description": "Crea una nueva configuración del sistema. Settings recomendados para transacciones:\n\n- MAX_DAILY_WITHDRAWAL: Límite diario de retiros (ej: \"5000.00\")\n- MIN_TRANSACTION_AMOUNT: Monto mínimo por transacción (ej: \"1.00\")\n- MAX_TRANSACTION_AMOUNT: Monto máximo por transacción (ej: \"100000.00\")\n\nEstos settings son leídos por TransactionService para validar transacciones. Si no existen, se usan valores por defecto."
+					},
+					"response": []
+				},
+				{
+					"name": "Create MIN_TRANSACTION_AMOUNT",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"settingKey\": \"MIN_TRANSACTION_AMOUNT\",\n    \"settingValue\": \"1.00\",\n    \"description\": \"Monto mínimo permitido por transacción\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin/settings",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"settings"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create MAX_TRANSACTION_AMOUNT",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"settingKey\": \"MAX_TRANSACTION_AMOUNT\",\n    \"settingValue\": \"100000.00\",\n    \"description\": \"Monto máximo permitido por transacción\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin/settings",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"settings"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Settings",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/admin/settings",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"settings"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Setting by Key",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/admin/settings/MAX_DAILY_WITHDRAWAL",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"settings",
+								"MAX_DAILY_WITHDRAWAL"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Setting",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"settingKey\": \"MAX_DAILY_WITHDRAWAL\",\n    \"settingValue\": \"7500.00\",\n    \"description\": \"Monto máximo de retiro diario por cuenta (actualizado)\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin/settings/MAX_DAILY_WITHDRAWAL",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"settings",
+								"MAX_DAILY_WITHDRAWAL"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Setting",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/admin/settings/MAX_DAILY_WITHDRAWAL",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"settings",
+								"MAX_DAILY_WITHDRAWAL"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints de configuración del sistema (solo ADMIN)"
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080/api/v1",
+			"type": "string"
+		},
+		{
+			"key": "jwtToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "adminToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "userEmail",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "accountId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "accountNumber",
+			"value": "1234567890",
+			"type": "string"
+		},
+		{
+			"key": "transactionId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "userId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "customerId",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
