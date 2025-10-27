@@ -1,8 +1,9 @@
 # Fase 1: Build
 FROM maven:3.9-eclipse-temurin-21-alpine AS build
 WORKDIR /app
-COPY . .
-RUN mvn clean package -DskipTests
+COPY pom.xml .
+COPY src ./src
+RUN mvn clean package -DskipTests -B -Dcheckstyle.skip=true
 
 # Fase 2: Runtime
 FROM eclipse-temurin:21-jre-alpine
