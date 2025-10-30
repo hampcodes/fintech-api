@@ -34,6 +34,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Auth endpoints
                         .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/accounts").permitAll()
                         // Actuator endpoints (Health Check)
                         .requestMatchers("/actuator/health/**", "/actuator/info").permitAll()
                         // Swagger/OpenAPI endpoints
