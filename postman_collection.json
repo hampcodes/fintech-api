@@ -546,6 +546,109 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "Get All Accounts Paginated",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/accounts/paginated?page=0&size=10&sortBy=createdAt&sortDir=DESC",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"accounts",
+								"paginated"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "0",
+									"description": "Número de página (default: 0)"
+								},
+								{
+									"key": "size",
+									"value": "10",
+									"description": "Tamaño de página (default: 10)"
+								},
+								{
+									"key": "sortBy",
+									"value": "createdAt",
+									"description": "Campo para ordenar (default: createdAt)"
+								},
+								{
+									"key": "sortDir",
+									"value": "DESC",
+									"description": "Dirección de ordenamiento: ASC/DESC (default: DESC)"
+								}
+							]
+						},
+						"description": "Lista cuentas con paginación. USER ve solo sus cuentas, ADMIN ve todas las cuentas."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Active Accounts Paginated",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/accounts/paginated/active?page=0&size=10&sortBy=createdAt&sortDir=DESC",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"accounts",
+								"paginated",
+								"active"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "0",
+									"description": "Número de página (default: 0)"
+								},
+								{
+									"key": "size",
+									"value": "10",
+									"description": "Tamaño de página (default: 10)"
+								},
+								{
+									"key": "sortBy",
+									"value": "createdAt",
+									"description": "Campo para ordenar (default: createdAt)"
+								},
+								{
+									"key": "sortDir",
+									"value": "DESC",
+									"description": "Dirección de ordenamiento: ASC/DESC (default: DESC)"
+								}
+							]
+						},
+						"description": "Lista cuentas activas con paginación. USER ve solo sus cuentas activas, ADMIN ve todas las cuentas activas."
+					},
+					"response": []
 				}
 			],
 			"description": "Endpoints para gestión de cuentas bancarias del usuario autenticado (con validación de ownership)"
@@ -793,7 +896,7 @@
 					"response": []
 				},
 				{
-					"name": "Get Transactions by Account",
+					"name": "Get Transactions by Account Number",
 					"request": {
 						"auth": {
 							"type": "bearer",
@@ -808,16 +911,335 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{baseUrl}}/transactions/account/{{accountNumber}}",
+							"raw": "{{baseUrl}}/transactions/account/number/{{accountNumber}}",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
 								"transactions",
 								"account",
+								"number",
 								"{{accountNumber}}"
 							]
-						}
+						},
+						"description": "Obtiene todas las transacciones de una cuenta por su número de cuenta"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Transactions by Account ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/transactions/account/id/{{accountId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"transactions",
+								"account",
+								"id",
+								"{{accountId}}"
+							]
+						},
+						"description": "Obtiene todas las transacciones de una cuenta por su ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Transactions Paginated",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/transactions/paginated?page=0&size=20&sortBy=timestamp&sortDir=DESC",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"transactions",
+								"paginated"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "0",
+									"description": "Número de página (default: 0)"
+								},
+								{
+									"key": "size",
+									"value": "20",
+									"description": "Tamaño de página (default: 20)"
+								},
+								{
+									"key": "sortBy",
+									"value": "timestamp",
+									"description": "Campo para ordenar (default: timestamp)"
+								},
+								{
+									"key": "sortDir",
+									"value": "DESC",
+									"description": "Dirección de ordenamiento: ASC/DESC (default: DESC)"
+								}
+							]
+						},
+						"description": "Lista transacciones con paginación. USER ve solo sus transacciones, ADMIN ve todas las transacciones."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Transactions by Account Number Paginated",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/transactions/paginated/account/number/{{accountNumber}}?page=0&size=20&sortBy=timestamp&sortDir=DESC",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"transactions",
+								"paginated",
+								"account",
+								"number",
+								"{{accountNumber}}"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "0",
+									"description": "Número de página (default: 0)"
+								},
+								{
+									"key": "size",
+									"value": "20",
+									"description": "Tamaño de página (default: 20)"
+								},
+								{
+									"key": "sortBy",
+									"value": "timestamp",
+									"description": "Campo para ordenar (default: timestamp)"
+								},
+								{
+									"key": "sortDir",
+									"value": "DESC",
+									"description": "Dirección de ordenamiento: ASC/DESC (default: DESC)"
+								}
+							]
+						},
+						"description": "Lista transacciones de una cuenta específica por número de cuenta con paginación."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Transactions by Account ID Paginated",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/transactions/paginated/account/id/{{accountId}}?page=0&size=20&sortBy=timestamp&sortDir=DESC",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"transactions",
+								"paginated",
+								"account",
+								"id",
+								"{{accountId}}"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "0",
+									"description": "Número de página (default: 0)"
+								},
+								{
+									"key": "size",
+									"value": "20",
+									"description": "Tamaño de página (default: 20)"
+								},
+								{
+									"key": "sortBy",
+									"value": "timestamp",
+									"description": "Campo para ordenar (default: timestamp)"
+								},
+								{
+									"key": "sortDir",
+									"value": "DESC",
+									"description": "Dirección de ordenamiento: ASC/DESC (default: DESC)"
+								}
+							]
+						},
+						"description": "Lista transacciones de una cuenta específica por ID con paginación."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Transactions by Date Range Paginated",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/transactions/paginated/date-range?startDate=2025-01-01T00:00:00&endDate=2025-01-31T23:59:59&page=0&size=20&sortBy=timestamp&sortDir=DESC",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"transactions",
+								"paginated",
+								"date-range"
+							],
+							"query": [
+								{
+									"key": "startDate",
+									"value": "2025-01-01T00:00:00",
+									"description": "Fecha inicio en formato ISO 8601 (REQUIRED)"
+								},
+								{
+									"key": "endDate",
+									"value": "2025-01-31T23:59:59",
+									"description": "Fecha fin en formato ISO 8601 (REQUIRED)"
+								},
+								{
+									"key": "page",
+									"value": "0",
+									"description": "Número de página (default: 0)"
+								},
+								{
+									"key": "size",
+									"value": "20",
+									"description": "Tamaño de página (default: 20)"
+								},
+								{
+									"key": "sortBy",
+									"value": "timestamp",
+									"description": "Campo para ordenar (default: timestamp)"
+								},
+								{
+									"key": "sortDir",
+									"value": "DESC",
+									"description": "Dirección de ordenamiento: ASC/DESC (default: DESC)"
+								}
+							]
+						},
+						"description": "Lista transacciones filtradas por rango de fechas con paginación. Formato de fecha: ISO 8601 (ej: 2025-01-01T00:00:00). USER ve solo sus transacciones, ADMIN ve todas."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Transactions by Account Number and Date Range Paginated",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/transactions/paginated/account/number/{{accountNumber}}/date-range?startDate=2025-01-01T00:00:00&endDate=2025-01-31T23:59:59&page=0&size=20&sortBy=timestamp&sortDir=DESC",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"transactions",
+								"paginated",
+								"account",
+								"number",
+								"{{accountNumber}}",
+								"date-range"
+							],
+							"query": [
+								{
+									"key": "startDate",
+									"value": "2025-01-01T00:00:00",
+									"description": "Fecha inicio en formato ISO 8601 (REQUIRED)"
+								},
+								{
+									"key": "endDate",
+									"value": "2025-01-31T23:59:59",
+									"description": "Fecha fin en formato ISO 8601 (REQUIRED)"
+								},
+								{
+									"key": "page",
+									"value": "0",
+									"description": "Número de página (default: 0)"
+								},
+								{
+									"key": "size",
+									"value": "20",
+									"description": "Tamaño de página (default: 20)"
+								},
+								{
+									"key": "sortBy",
+									"value": "timestamp",
+									"description": "Campo para ordenar (default: timestamp)"
+								},
+								{
+									"key": "sortDir",
+									"value": "DESC",
+									"description": "Dirección de ordenamiento: ASC/DESC (default: DESC)"
+								}
+							]
+						},
+						"description": "Lista transacciones de una cuenta específica filtradas por rango de fechas con paginación. Formato de fecha: ISO 8601 (ej: 2025-01-01T00:00:00)."
 					},
 					"response": []
 				}

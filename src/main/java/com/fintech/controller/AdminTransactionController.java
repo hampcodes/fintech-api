@@ -27,4 +27,18 @@ public class AdminTransactionController {
         List<TransactionResponse> transactions = transactionService.getAllTransactionsAdmin();
         return ResponseEntity.ok(transactions);
     }
+
+    @Operation(summary = "Listar transacciones por número de cuenta (admin)")
+    @GetMapping("/account/number/{accountNumber}")
+    public ResponseEntity<List<TransactionResponse>> getTransactionsByAccountNumber(@PathVariable String accountNumber) {
+        List<TransactionResponse> transactions = transactionService.getTransactionsByAccountNumber(accountNumber);
+        return ResponseEntity.ok(transactions);
+    }
+
+    @Operation(summary = "Listar transacciones por ID de cuenta (admin)")
+    @GetMapping("/account/id/{accountId}")
+    public ResponseEntity<List<TransactionResponse>> getTransactionsByAccountId(@PathVariable String accountId) {
+        List<TransactionResponse> transactions = transactionService.getTransactionsByAccountId(accountId);
+        return ResponseEntity.ok(transactions);
+    }
 }

@@ -15,12 +15,12 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/customer")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('USER')")
 public class CustomerController {
 
     private final CustomerService customerService;
 
     @Operation(summary = "Obtener mi perfil de cliente")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @GetMapping("/profile")
     public ResponseEntity<CustomerResponse> getMyProfile() {
         CustomerResponse response = customerService.getMyProfile();
@@ -28,6 +28,7 @@ public class CustomerController {
     }
 
     @Operation(summary = "Actualizar mi perfil de cliente")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @PutMapping("/profile")
     public ResponseEntity<CustomerResponse> updateMyProfile(@Valid @RequestBody CustomerRequest request) {
         CustomerResponse response = customerService.updateMyProfile(request);

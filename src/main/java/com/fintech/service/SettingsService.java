@@ -42,7 +42,6 @@ public class SettingsService {
                 .collect(Collectors.toList());
     }
 
-    @Transactional(readOnly = true)
     public SettingResponse getSettingByKey(String key) {
         SystemSetting setting = settingsRepository.findBySettingKey(key)
                 .orElseThrow(() -> new RuntimeException("Setting not found: " + key));

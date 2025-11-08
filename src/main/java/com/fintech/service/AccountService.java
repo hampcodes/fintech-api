@@ -13,6 +13,8 @@ import com.fintech.repository.CustomerRepository;
 import com.fintech.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -34,12 +36,19 @@ public class AccountService {
 
     @Transactional
     public AccountResponse createAccount(AccountRequest request) {
+        // Validar que el número de cuenta no exista globalmente
         if (accountRepository.existsByAccountNumber(request.accountNumber())) {
             throw new DuplicateAccountException(
                     "Account with number " + request.accountNumber() + " already exists");
         }
 
         Customer customer = getAuthenticatedCustomer();
+
+        // Validar que el customer no tenga ya una cuenta con ese número
+        if (accountRepository.existsByAccountNumberAndCustomerId(request.accountNumber(), customer.getId())) {
+            throw new DuplicateAccountException(
+                    "You already have an account with number " + request.accountNumber());
+        }
 
         Account account = new Account();
         account.setAccountNumber(request.accountNumber());
@@ -68,6 +77,12 @@ public class AccountService {
 
     @Transactional(readOnly = true)
     public List<AccountResponse> getAllAccounts() {
+        if (isAdmin()) {
+            return accountRepository.findAll()
+                    .stream()
+                    .map(this::mapToResponse)
+                    .collect(Collectors.toList());
+        }
         Customer currentCustomer = getAuthenticatedCustomer();
         return accountRepository.findAll()
                 .stream()
@@ -78,6 +93,12 @@ public class AccountService {
 
     @Transactional(readOnly = true)
     public List<AccountResponse> getActiveAccounts() {
+        if (isAdmin()) {
+            return accountRepository.findByActive(true)
+                    .stream()
+                    .map(this::mapToResponse)
+                    .collect(Collectors.toList());
+        }
         Customer currentCustomer = getAuthenticatedCustomer();
         return accountRepository.findByActive(true)
                 .stream()
@@ -130,7 +151,19 @@ public class AccountService {
                 .orElseThrow(() -> new RuntimeException("Customer not found for user"));
     }
 
+    private boolean isAdmin() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        boolean admin = authentication.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
+        log.info("AccountService - User: {}, isAdmin: {}, authorities: {}",
+                authentication.getName(), admin, authentication.getAuthorities());
+        return admin;
+    }
+
     private void validateOwnership(Account account) {
+        if (isAdmin()) {
+            return; // Admin can access all accounts (read-only)
+        }
         Customer currentCustomer = getAuthenticatedCustomer();
         if (!account.getCustomer().getId().equals(currentCustomer.getId())) {
             throw new UnauthorizedAccessException("You don't have permission to access this account");
@@ -149,6 +182,30 @@ public class AccountService {
                 account.getCreatedAt(),
                 account.getUpdatedAt()
         );
+    }
+
+    // ==================== PAGINATED METHODS ====================
+
+    @Transactional(readOnly = true)
+    public Page<AccountResponse> getAllAccountsPaginated(Pageable pageable) {
+        if (isAdmin()) {
+            return accountRepository.findAll(pageable)
+                    .map(this::mapToResponse);
+        }
+        Customer currentCustomer = getAuthenticatedCustomer();
+        return accountRepository.findByCustomerId(currentCustomer.getId(), pageable)
+                .map(this::mapToResponse);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<AccountResponse> getActiveAccountsPaginated(Pageable pageable) {
+        if (isAdmin()) {
+            return accountRepository.findByActive(true, pageable)
+                    .map(this::mapToResponse);
+        }
+        Customer currentCustomer = getAuthenticatedCustomer();
+        return accountRepository.findByCustomerIdAndActive(currentCustomer.getId(), true, pageable)
+                .map(this::mapToResponse);
     }
 
     // ==================== ADMIN METHODS (sin validación de ownership) ====================

@@ -8,6 +8,10 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,12 +24,12 @@ import java.util.List;
 @RestController
 @RequestMapping("/accounts")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('USER')")
 public class AccountController {
 
     private final AccountService accountService;
 
     @Operation(summary = "Crear nueva cuenta bancaria")
+    @PreAuthorize("hasRole('USER')")
     @PostMapping
     public ResponseEntity<AccountResponse> createAccount(@Valid @RequestBody AccountRequest request) {
         AccountResponse response = accountService.createAccount(request);
@@ -33,6 +37,7 @@ public class AccountController {
     }
 
     @Operation(summary = "Obtener cuenta por ID")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<AccountResponse> getAccountById(@PathVariable String id) {
         AccountResponse response = accountService.getAccountById(id);
@@ -40,6 +45,7 @@ public class AccountController {
     }
 
     @Operation(summary = "Obtener cuenta por número")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @GetMapping("/number/{accountNumber}")
     public ResponseEntity<AccountResponse> getAccountByNumber(@PathVariable String accountNumber) {
         AccountResponse response = accountService.getAccountByNumber(accountNumber);
@@ -47,6 +53,7 @@ public class AccountController {
     }
 
     @Operation(summary = "Listar todas las cuentas del usuario autenticado")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @GetMapping
     public ResponseEntity<List<AccountResponse>> getAllAccounts() {
         List<AccountResponse> accounts = accountService.getAllAccounts();
@@ -54,6 +61,7 @@ public class AccountController {
     }
 
     @Operation(summary = "Listar cuentas activas del usuario autenticado")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @GetMapping("/active")
     public ResponseEntity<List<AccountResponse>> getActiveAccounts() {
         List<AccountResponse> accounts = accountService.getActiveAccounts();
@@ -61,6 +69,7 @@ public class AccountController {
     }
 
     @Operation(summary = "Desactivar cuenta")
+    @PreAuthorize("hasRole('USER')")
     @PatchMapping("/{id}/deactivate")
     public ResponseEntity<AccountResponse> deactivateAccount(@PathVariable String id) {
         AccountResponse response = accountService.deactivateAccount(id);
@@ -68,6 +77,7 @@ public class AccountController {
     }
 
     @Operation(summary = "Activar cuenta")
+    @PreAuthorize("hasRole('USER')")
     @PatchMapping("/{id}/activate")
     public ResponseEntity<AccountResponse> activateAccount(@PathVariable String id) {
         AccountResponse response = accountService.activateAccount(id);
@@ -75,9 +85,40 @@ public class AccountController {
     }
 
     @Operation(summary = "Consultar saldo de cuenta")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @GetMapping("/number/{accountNumber}/balance")
     public ResponseEntity<BigDecimal> getAccountBalance(@PathVariable String accountNumber) {
         BigDecimal balance = accountService.getAccountBalance(accountNumber);
         return ResponseEntity.ok(balance);
+    }
+
+    // ==================== PAGINATED ENDPOINTS ====================
+
+    @Operation(summary = "Listar cuentas con paginación")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @GetMapping("/paginated")
+    public ResponseEntity<Page<AccountResponse>> getAllAccountsPaginated(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "DESC") String sortDir) {
+        Sort sort = sortDir.equalsIgnoreCase("ASC") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Page<AccountResponse> accounts = accountService.getAllAccountsPaginated(pageable);
+        return ResponseEntity.ok(accounts);
+    }
+
+    @Operation(summary = "Listar cuentas activas con paginación")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @GetMapping("/paginated/active")
+    public ResponseEntity<Page<AccountResponse>> getActiveAccountsPaginated(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "DESC") String sortDir) {
+        Sort sort = sortDir.equalsIgnoreCase("ASC") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Page<AccountResponse> accounts = accountService.getActiveAccountsPaginated(pageable);
+        return ResponseEntity.ok(accounts);
     }
 }
