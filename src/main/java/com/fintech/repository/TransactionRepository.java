@@ -68,6 +68,65 @@ public interface TransactionRepository extends JpaRepository<Transaction, String
             Pageable pageable
     );
 
-    // Métodos para reportes
+    // ==================== MÉTODOS PARA REPORTES ====================
+
+    // Contar transacciones por tipo
     long countByType(TransactionType type);
+
+    // Contar transacciones en un rango de fechas
+    @Query("SELECT COUNT(t) FROM Transaction t WHERE t.timestamp BETWEEN :startDate AND :endDate")
+    long countByDateRange(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
+
+    // Contar transacciones por tipo en un rango de fechas
+    @Query("SELECT COUNT(t) FROM Transaction t WHERE t.type = :type AND t.timestamp BETWEEN :startDate AND :endDate")
+    long countByTypeAndDateRange(
+            @Param("type") TransactionType type,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
+
+    // Obtener transacciones agrupadas por fecha (para gráficos de línea/barras)
+    @Query("SELECT DATE(t.timestamp) as date, COUNT(t) as count, SUM(t.amount) as total " +
+           "FROM Transaction t " +
+           "WHERE t.timestamp BETWEEN :startDate AND :endDate " +
+           "GROUP BY DATE(t.timestamp) " +
+           "ORDER BY DATE(t.timestamp)")
+    List<Object[]> findTransactionsByDateGrouped(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
+
+    // Top cuentas por volumen de transacciones
+    @Query("SELECT t.account.accountNumber, t.account.customer.name, COUNT(t), SUM(t.amount) " +
+           "FROM Transaction t " +
+           "WHERE t.timestamp BETWEEN :startDate AND :endDate " +
+           "GROUP BY t.account.accountNumber, t.account.customer.name " +
+           "ORDER BY COUNT(t) DESC")
+    List<Object[]> findTopAccountsByTransactionCount(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            Pageable pageable
+    );
+
+    // Transacciones agrupadas por tipo
+    @Query("SELECT t.type, COUNT(t), SUM(t.amount) " +
+           "FROM Transaction t " +
+           "WHERE t.timestamp BETWEEN :startDate AND :endDate " +
+           "GROUP BY t.type")
+    List<Object[]> findTransactionsByTypeGrouped(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
+
+    // Usuarios más activos (por transacciones)
+    @Query("SELECT t.account.customer.id, t.account.customer.name, COUNT(t), SUM(t.amount), MAX(t.timestamp) " +
+           "FROM Transaction t " +
+           "WHERE t.timestamp BETWEEN :startDate AND :endDate " +
+           "GROUP BY t.account.customer.id, t.account.customer.name " +
+           "ORDER BY COUNT(t) DESC")
+    List<Object[]> findTopUsersByActivity(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            Pageable pageable
+    );
 }

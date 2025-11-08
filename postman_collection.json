@@ -1732,150 +1732,486 @@
 			"description": "Endpoints de administración de transacciones (solo ADMIN)"
 		},
 		{
-			"name": "Admin - Reports",
+			"name": "Reports (Admin Only)",
 			"item": [
 				{
-					"name": "Get Dashboard Statistics",
-					"event": [
+					"name": "1. Transactions Reports",
+					"item": [
 						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test(\"Status code is 200\", function () {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"pm.test(\"Dashboard has all sections\", function () {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData).to.have.property('userStatistics');",
-									"    pm.expect(jsonData).to.have.property('accountStatistics');",
-									"    pm.expect(jsonData).to.have.property('transactionStatistics');",
-									"});"
-								],
-								"type": "text/javascript"
-							}
+							"name": "Get Transactions by Period",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/reports/transactions/by-period?startDate=2025-01-01&endDate=2025-01-31",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"reports",
+										"transactions",
+										"by-period"
+									],
+									"query": [
+										{
+											"key": "startDate",
+											"value": "2025-01-01",
+											"description": "Fecha inicio (YYYY-MM-DD)"
+										},
+										{
+											"key": "endDate",
+											"value": "2025-01-31",
+											"description": "Fecha fin (YYYY-MM-DD)"
+										}
+									]
+								},
+								"description": "Reporte de transacciones agrupadas por período (día). Ideal para gráficos de líneas/barras temporales."
+							},
+							"response": []
+						},
+						{
+							"name": "Get Transactions by Type",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/reports/transactions/by-type?startDate=2025-01-01&endDate=2025-01-31",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"reports",
+										"transactions",
+										"by-type"
+									],
+									"query": [
+										{
+											"key": "startDate",
+											"value": "2025-01-01"
+										},
+										{
+											"key": "endDate",
+											"value": "2025-01-31"
+										}
+									]
+								},
+								"description": "Transacciones agrupadas por tipo (DEPOSIT/WITHDRAW) con porcentajes. Ideal para gráficos de pie/dona."
+							},
+							"response": []
+						},
+						{
+							"name": "Get Top Accounts by Transactions",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/reports/transactions/top-accounts?startDate=2025-01-01&endDate=2025-01-31&limit=10",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"reports",
+										"transactions",
+										"top-accounts"
+									],
+									"query": [
+										{
+											"key": "startDate",
+											"value": "2025-01-01"
+										},
+										{
+											"key": "endDate",
+											"value": "2025-01-31"
+										},
+										{
+											"key": "limit",
+											"value": "10",
+											"description": "Número de cuentas top a mostrar (default: 10)"
+										}
+									]
+								},
+								"description": "Top cuentas más activas por cantidad de transacciones."
+							},
+							"response": []
 						}
-					],
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{adminToken}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/admin/reports/dashboard",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"admin",
-								"reports",
-								"dashboard"
-							]
-						},
-						"description": "Dashboard completo con estadísticas de usuarios, cuentas y transacciones"
-					},
-					"response": []
+					]
 				},
 				{
-					"name": "Get User Statistics",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{adminToken}}",
-									"type": "string"
-								}
-							]
+					"name": "2. Accounts Reports",
+					"item": [
+						{
+							"name": "Get Balance Distribution",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/reports/accounts/balance-distribution",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"reports",
+										"accounts",
+										"balance-distribution"
+									]
+								},
+								"description": "Distribución de saldos por rangos (0-1K, 1K-5K, 5K-10K, 10K-50K, 50K+). Ideal para histogramas."
+							},
+							"response": []
 						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/admin/reports/users",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"admin",
-								"reports",
-								"users"
-							]
-						},
-						"description": "Estadísticas de usuarios: total, activos, inactivos, por rol"
-					},
-					"response": []
+						{
+							"name": "Get Top Accounts by Balance",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/reports/accounts/top-by-balance?limit=10",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"reports",
+										"accounts",
+										"top-by-balance"
+									],
+									"query": [
+										{
+											"key": "limit",
+											"value": "10",
+											"description": "Número de cuentas a mostrar (default: 10)"
+										}
+									]
+								},
+								"description": "Top cuentas con mayor saldo."
+							},
+							"response": []
+						}
+					]
 				},
 				{
-					"name": "Get Account Statistics",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{adminToken}}",
-									"type": "string"
-								}
-							]
+					"name": "3. Users Reports",
+					"item": [
+						{
+							"name": "Get Top Users by Activity",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/reports/users/top-by-activity?startDate=2025-01-01&endDate=2025-01-31&limit=10",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"reports",
+										"users",
+										"top-by-activity"
+									],
+									"query": [
+										{
+											"key": "startDate",
+											"value": "2025-01-01"
+										},
+										{
+											"key": "endDate",
+											"value": "2025-01-31"
+										},
+										{
+											"key": "limit",
+											"value": "10",
+											"description": "Número de usuarios a mostrar (default: 10)"
+										}
+									]
+								},
+								"description": "Usuarios más activos por cantidad de transacciones."
+							},
+							"response": []
 						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/admin/reports/accounts",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"admin",
-								"reports",
-								"accounts"
-							]
-						},
-						"description": "Estadísticas de cuentas: total, activas, inactivas, balance total y promedio"
-					},
-					"response": []
+						{
+							"name": "Get User Growth by Period",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/reports/users/growth?startDate=2025-01-01&endDate=2025-01-31",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"reports",
+										"users",
+										"growth"
+									],
+									"query": [
+										{
+											"key": "startDate",
+											"value": "2025-01-01"
+										},
+										{
+											"key": "endDate",
+											"value": "2025-01-31"
+										}
+									]
+								},
+								"description": "Crecimiento de usuarios día a día (nuevos usuarios, usuarios activos)."
+							},
+							"response": []
+						}
+					]
 				},
 				{
-					"name": "Get Transaction Statistics",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{adminToken}}",
-									"type": "string"
-								}
-							]
+					"name": "4. Dashboard",
+					"item": [
+						{
+							"name": "Get Dashboard Metrics",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/reports/dashboard",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"reports",
+										"dashboard"
+									]
+								},
+								"description": "Métricas consolidadas del dashboard: usuarios, cuentas, transacciones, balances y tasas de crecimiento."
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "5. Period Comparison",
+					"item": [
+						{
+							"name": "Get Period Comparison",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/reports/comparison?currentStartDate=2025-11-01&currentEndDate=2025-11-30&previousStartDate=2025-10-01&previousEndDate=2025-10-31",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"reports",
+										"comparison"
+									],
+									"query": [
+										{
+											"key": "currentStartDate",
+											"value": "2025-11-01",
+											"description": "Fecha inicio período actual"
+										},
+										{
+											"key": "currentEndDate",
+											"value": "2025-11-30",
+											"description": "Fecha fin período actual"
+										},
+										{
+											"key": "previousStartDate",
+											"value": "2025-10-01",
+											"description": "Fecha inicio período anterior"
+										},
+										{
+											"key": "previousEndDate",
+											"value": "2025-10-31",
+											"description": "Fecha fin período anterior"
+										}
+									]
+								},
+								"description": "Comparación entre dos períodos de tiempo (ej: mes actual vs mes anterior) con cambios porcentuales."
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Quick Reports",
+					"item": [
+						{
+							"name": "Get Today Report",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/reports/today",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"reports",
+										"today"
+									]
+								},
+								"description": "Reporte rápido de transacciones de hoy."
+							},
+							"response": []
 						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/admin/reports/transactions",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"admin",
-								"reports",
-								"transactions"
-							]
+						{
+							"name": "Get Current Week Report",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/reports/current-week",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"reports",
+										"current-week"
+									]
+								},
+								"description": "Reporte rápido de la semana actual."
+							},
+							"response": []
 						},
-						"description": "Estadísticas de transacciones: total, depósitos, retiros, montos, flujo de caja neto"
-					},
-					"response": []
+						{
+							"name": "Get Current Month Report",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/reports/current-month",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"reports",
+										"current-month"
+									]
+								},
+								"description": "Reporte rápido del mes actual."
+							},
+							"response": []
+						}
+					]
 				}
 			],
-			"description": "Endpoints de reportes y estadísticas (solo ADMIN)"
+			"description": "Endpoints de reportes gráficos y estadísticas (SOLO ADMIN). Incluye 5 tipos de reportes: Transacciones, Cuentas, Usuarios, Dashboard y Comparación Temporal."
 		},
 		{
 			"name": "Admin - Settings",
