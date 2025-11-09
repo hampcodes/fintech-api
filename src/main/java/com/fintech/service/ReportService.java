@@ -2,14 +2,20 @@ package com.fintech.service;
 
 import com.fintech.dto.response.report.*;
 import com.fintech.model.Account;
+import com.fintech.model.Customer;
 import com.fintech.model.TransactionType;
+import com.fintech.model.User;
 import com.fintech.repository.AccountRepository;
+import com.fintech.repository.CustomerRepository;
 import com.fintech.repository.TransactionRepository;
 import com.fintech.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +27,7 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +37,24 @@ public class ReportService {
     private final TransactionRepository transactionRepository;
     private final AccountRepository accountRepository;
     private final UserRepository userRepository;
+    private final CustomerRepository customerRepository;
+
+    // ==================== HELPER METHODS ====================
+
+    private Customer getAuthenticatedCustomer() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = authentication.getName();
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + userEmail));
+        return customerRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new RuntimeException("Customer not found for user"));
+    }
+
+    private boolean isAdmin() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return authentication.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
+    }
 
     // ==================== 1. REPORTES DE TRANSACCIONES ====================
 
@@ -37,8 +62,15 @@ public class ReportService {
     public List<TransactionReportDTO> getTransactionReportByPeriod(LocalDateTime startDate, LocalDateTime endDate) {
         log.info("Generating transaction report by period from {} to {}", startDate, endDate);
 
+        // Determinar si es admin o customer
+        boolean admin = isAdmin();
+        Customer customer = admin ? null : getAuthenticatedCustomer();
+        String customerId = customer != null ? customer.getId() : null;
+
         List<TransactionReportDTO> reports = new ArrayList<>();
-        List<Object[]> results = transactionRepository.findTransactionsByDateGrouped(startDate, endDate);
+        List<Object[]> results = admin ?
+                transactionRepository.findTransactionsByDateGrouped(startDate, endDate) :
+                transactionRepository.findTransactionsByDateGroupedForCustomer(startDate, endDate, customerId);
 
         for (Object[] row : results) {
             LocalDate date = ((java.sql.Date) row[0]).toLocalDate();
@@ -49,11 +81,17 @@ public class ReportService {
             LocalDateTime dayStart = date.atStartOfDay();
             LocalDateTime dayEnd = date.atTime(LocalTime.MAX);
 
-            long deposits = transactionRepository.countByTypeAndDateRange(TransactionType.DEPOSIT, dayStart, dayEnd);
-            long withdrawals = transactionRepository.countByTypeAndDateRange(TransactionType.WITHDRAW, dayStart, dayEnd);
+            long deposits = admin ?
+                    transactionRepository.countByTypeAndDateRange(TransactionType.DEPOSIT, dayStart, dayEnd) :
+                    transactionRepository.countByTypeAndDateRangeAndCustomer(TransactionType.DEPOSIT, dayStart, dayEnd, customerId);
+            long withdrawals = admin ?
+                    transactionRepository.countByTypeAndDateRange(TransactionType.WITHDRAW, dayStart, dayEnd) :
+                    transactionRepository.countByTypeAndDateRangeAndCustomer(TransactionType.WITHDRAW, dayStart, dayEnd, customerId);
 
             // Obtener montos por tipo
-            List<Object[]> typeData = transactionRepository.findTransactionsByTypeGrouped(dayStart, dayEnd);
+            List<Object[]> typeData = admin ?
+                    transactionRepository.findTransactionsByTypeGrouped(dayStart, dayEnd) :
+                    transactionRepository.findTransactionsByTypeGroupedForCustomer(dayStart, dayEnd, customerId);
             BigDecimal depositAmount = BigDecimal.ZERO;
             BigDecimal withdrawalAmount = BigDecimal.ZERO;
 
@@ -87,10 +125,19 @@ public class ReportService {
     public List<TransactionByTypeDTO> getTransactionsByType(LocalDateTime startDate, LocalDateTime endDate) {
         log.info("Generating transactions by type report from {} to {}", startDate, endDate);
 
-        List<Object[]> results = transactionRepository.findTransactionsByTypeGrouped(startDate, endDate);
+        // Determinar si es admin o customer
+        boolean admin = isAdmin();
+        Customer customer = admin ? null : getAuthenticatedCustomer();
+        String customerId = customer != null ? customer.getId() : null;
+
+        List<Object[]> results = admin ?
+                transactionRepository.findTransactionsByTypeGrouped(startDate, endDate) :
+                transactionRepository.findTransactionsByTypeGroupedForCustomer(startDate, endDate, customerId);
         List<TransactionByTypeDTO> reports = new ArrayList<>();
 
-        long totalTransactions = transactionRepository.countByDateRange(startDate, endDate);
+        long totalTransactions = admin ?
+                transactionRepository.countByDateRange(startDate, endDate) :
+                transactionRepository.countByDateRangeAndCustomer(startDate, endDate, customerId);
 
         for (Object[] row : results) {
             TransactionType type = (TransactionType) row[0];
@@ -109,8 +156,15 @@ public class ReportService {
             LocalDateTime startDate, LocalDateTime endDate, int limit) {
         log.info("Generating top {} accounts by transaction count from {} to {}", limit, startDate, endDate);
 
+        // Determinar si es admin o customer
+        boolean admin = isAdmin();
+        Customer customer = admin ? null : getAuthenticatedCustomer();
+        String customerId = customer != null ? customer.getId() : null;
+
         Pageable pageable = PageRequest.of(0, limit);
-        List<Object[]> results = transactionRepository.findTopAccountsByTransactionCount(startDate, endDate, pageable);
+        List<Object[]> results = admin ?
+                transactionRepository.findTopAccountsByTransactionCount(startDate, endDate, pageable) :
+                transactionRepository.findTopAccountsByTransactionCountForCustomer(startDate, endDate, customerId, pageable);
         List<TransactionByAccountDTO> reports = new ArrayList<>();
 
         for (Object[] row : results) {
@@ -131,7 +185,14 @@ public class ReportService {
     public List<BalanceDistributionDTO> getBalanceDistribution() {
         log.info("Generating balance distribution report");
 
-        List<Object[]> results = accountRepository.findBalanceDistribution();
+        // Determinar si es admin o customer
+        boolean admin = isAdmin();
+        Customer customer = admin ? null : getAuthenticatedCustomer();
+        String customerId = customer != null ? customer.getId() : null;
+
+        List<Object[]> results = admin ?
+                accountRepository.findBalanceDistribution() :
+                accountRepository.findBalanceDistributionForCustomer(customerId);
         List<BalanceDistributionDTO> reports = new ArrayList<>();
 
         for (Object[] row : results) {
@@ -149,8 +210,15 @@ public class ReportService {
     public List<TopAccountsByBalanceDTO> getTopAccountsByBalance(int limit) {
         log.info("Generating top {} accounts by balance", limit);
 
+        // Determinar si es admin o customer
+        boolean admin = isAdmin();
+        Customer customer = admin ? null : getAuthenticatedCustomer();
+        String customerId = customer != null ? customer.getId() : null;
+
         Pageable pageable = PageRequest.of(0, limit);
-        List<Account> accounts = accountRepository.findTopAccountsByBalance(pageable);
+        List<Account> accounts = admin ?
+                accountRepository.findTopAccountsByBalance(pageable) :
+                accountRepository.findTopAccountsByBalanceForCustomer(customerId, pageable);
         List<TopAccountsByBalanceDTO> reports = new ArrayList<>();
 
         for (Account account : accounts) {
@@ -176,6 +244,10 @@ public class ReportService {
     public List<UserActivityDTO> getTopUsersByActivity(LocalDateTime startDate, LocalDateTime endDate, int limit) {
         log.info("Generating top {} users by activity from {} to {}", limit, startDate, endDate);
 
+        // Determinar si es admin o customer
+        boolean admin = isAdmin();
+        Customer customer = admin ? null : getAuthenticatedCustomer();
+
         Pageable pageable = PageRequest.of(0, limit);
         List<Object[]> results = transactionRepository.findTopUsersByActivity(startDate, endDate, pageable);
         List<UserActivityDTO> reports = new ArrayList<>();
@@ -187,7 +259,10 @@ public class ReportService {
             BigDecimal totalVolume = row[3] != null ? new BigDecimal(row[3].toString()) : BigDecimal.ZERO;
             LocalDateTime lastActivity = row[4] != null ? (LocalDateTime) row[4] : null;
 
-            reports.add(new UserActivityDTO(customerId, customerName, transactionCount, totalVolume, lastActivity));
+            // Si no es admin, solo incluir datos del customer autenticado
+            if (admin || customerId.equals(customer.getId())) {
+                reports.add(new UserActivityDTO(customerId, customerName, transactionCount, totalVolume, lastActivity));
+            }
         }
 
         return reports;
@@ -197,6 +272,10 @@ public class ReportService {
     public List<UserGrowthDTO> getUserGrowthByPeriod(LocalDateTime startDate, LocalDateTime endDate) {
         log.info("Generating user growth report from {} to {}", startDate, endDate);
 
+        // Determinar si es admin o customer
+        boolean admin = isAdmin();
+        Customer customer = admin ? null : getAuthenticatedCustomer();
+
         List<UserGrowthDTO> reports = new ArrayList<>();
         LocalDate currentDate = startDate.toLocalDate();
         LocalDate end = endDate.toLocalDate();
@@ -205,9 +284,10 @@ public class ReportService {
             LocalDateTime periodStart = currentDate.atStartOfDay();
             LocalDateTime periodEnd = currentDate.atTime(LocalTime.MAX);
 
-            long newUsers = userRepository.countNewUsersByDateRange(periodStart, periodEnd);
-            long totalUsers = userRepository.count();
-            long activeUsers = userRepository.countActiveUsersByDateRange(periodStart, periodEnd);
+            // USER solo ve su propia información (no puede ver crecimiento de otros usuarios)
+            long newUsers = admin ? userRepository.countNewUsersByDateRange(periodStart, periodEnd) : 0;
+            long totalUsers = admin ? userRepository.count() : 1;
+            long activeUsers = admin ? userRepository.countActiveUsersByDateRange(periodStart, periodEnd) : 1;
 
             reports.add(new UserGrowthDTO(
                     currentDate.toString(),
@@ -228,21 +308,37 @@ public class ReportService {
     public DashboardMetricsDTO getDashboardMetrics() {
         log.info("Generating dashboard metrics");
 
+        // Determinar si es admin o customer
+        boolean admin = isAdmin();
+        Customer customer = admin ? null : getAuthenticatedCustomer();
+        String customerId = customer != null ? customer.getId() : null;
+
         // Métricas generales
-        long totalUsers = userRepository.count();
-        long activeUsers = userRepository.countByActive(true);
-        long totalAccounts = accountRepository.count();
-        long activeAccounts = accountRepository.countByActive(true);
-        Double totalBalanceDouble = accountRepository.getTotalBalance();
+        long totalUsers = admin ? userRepository.count() : 1; // USER solo ve "1 usuario" (el mismo)
+        long activeUsers = admin ? userRepository.countByActive(true) : 1;
+        long totalAccounts = admin ?
+                accountRepository.count() :
+                accountRepository.countByCustomerIdAndActive(customerId, true) +
+                        accountRepository.countByCustomerIdAndActive(customerId, false);
+        long activeAccounts = admin ?
+                accountRepository.countByActive(true) :
+                accountRepository.countByCustomerIdAndActive(customerId, true);
+        Double totalBalanceDouble = admin ?
+                accountRepository.getTotalBalance() :
+                accountRepository.getTotalBalanceForCustomer(customerId);
         BigDecimal totalBalance = totalBalanceDouble != null ?
                 BigDecimal.valueOf(totalBalanceDouble) : BigDecimal.ZERO;
 
         // Métricas de transacciones de hoy
         LocalDateTime todayStart = LocalDate.now().atStartOfDay();
         LocalDateTime todayEnd = LocalDate.now().atTime(LocalTime.MAX);
-        long todayTransactions = transactionRepository.countByDateRange(todayStart, todayEnd);
+        long todayTransactions = admin ?
+                transactionRepository.countByDateRange(todayStart, todayEnd) :
+                transactionRepository.countByDateRangeAndCustomer(todayStart, todayEnd, customerId);
 
-        List<Object[]> todayData = transactionRepository.findTransactionsByTypeGrouped(todayStart, todayEnd);
+        List<Object[]> todayData = admin ?
+                transactionRepository.findTransactionsByTypeGrouped(todayStart, todayEnd) :
+                transactionRepository.findTransactionsByTypeGroupedForCustomer(todayStart, todayEnd, customerId);
         BigDecimal todayVolume = BigDecimal.ZERO;
         for (Object[] row : todayData) {
             BigDecimal amount = row[2] != null ? new BigDecimal(row[2].toString()) : BigDecimal.ZERO;
@@ -250,7 +346,9 @@ public class ReportService {
         }
 
         // Promedio de transacciones
-        long totalTransactions = transactionRepository.count();
+        long totalTransactions = admin ?
+                transactionRepository.count() :
+                transactionRepository.countByDateRangeAndCustomer(LocalDateTime.MIN, LocalDateTime.MAX, customerId);
         Double avgTransactionAmount = totalTransactions > 0 ?
                 todayVolume.divide(BigDecimal.valueOf(totalTransactions), 2, RoundingMode.HALF_UP).doubleValue() : 0.0;
 
@@ -258,8 +356,12 @@ public class ReportService {
         LocalDateTime yesterdayStart = LocalDate.now().minusDays(1).atStartOfDay();
         LocalDateTime yesterdayEnd = LocalDate.now().minusDays(1).atTime(LocalTime.MAX);
 
-        long yesterdayTransactions = transactionRepository.countByDateRange(yesterdayStart, yesterdayEnd);
-        List<Object[]> yesterdayData = transactionRepository.findTransactionsByTypeGrouped(yesterdayStart, yesterdayEnd);
+        long yesterdayTransactions = admin ?
+                transactionRepository.countByDateRange(yesterdayStart, yesterdayEnd) :
+                transactionRepository.countByDateRangeAndCustomer(yesterdayStart, yesterdayEnd, customerId);
+        List<Object[]> yesterdayData = admin ?
+                transactionRepository.findTransactionsByTypeGrouped(yesterdayStart, yesterdayEnd) :
+                transactionRepository.findTransactionsByTypeGroupedForCustomer(yesterdayStart, yesterdayEnd, customerId);
         BigDecimal yesterdayVolume = BigDecimal.ZERO;
         for (Object[] row : yesterdayData) {
             BigDecimal amount = row[2] != null ? new BigDecimal(row[2].toString()) : BigDecimal.ZERO;
@@ -308,25 +410,40 @@ public class ReportService {
         log.info("Generating period comparison: current({} to {}) vs previous({} to {})",
                 currentStart, currentEnd, previousStart, previousEnd);
 
+        // Determinar si es admin o customer
+        boolean admin = isAdmin();
+        Customer customer = admin ? null : getAuthenticatedCustomer();
+        String customerId = customer != null ? customer.getId() : null;
+
         // Métricas del período actual
-        long currentTransactions = transactionRepository.countByDateRange(currentStart, currentEnd);
-        List<Object[]> currentData = transactionRepository.findTransactionsByTypeGrouped(currentStart, currentEnd);
+        long currentTransactions = admin ?
+                transactionRepository.countByDateRange(currentStart, currentEnd) :
+                transactionRepository.countByDateRangeAndCustomer(currentStart, currentEnd, customerId);
+        List<Object[]> currentData = admin ?
+                transactionRepository.findTransactionsByTypeGrouped(currentStart, currentEnd) :
+                transactionRepository.findTransactionsByTypeGroupedForCustomer(currentStart, currentEnd, customerId);
         BigDecimal currentVolume = BigDecimal.ZERO;
         for (Object[] row : currentData) {
             BigDecimal amount = row[2] != null ? new BigDecimal(row[2].toString()) : BigDecimal.ZERO;
             currentVolume = currentVolume.add(amount);
         }
-        long currentActiveUsers = userRepository.countActiveUsersByDateRange(currentStart, currentEnd);
+        long currentActiveUsers = admin ?
+                userRepository.countActiveUsersByDateRange(currentStart, currentEnd) : 1;
 
         // Métricas del período anterior
-        long previousTransactions = transactionRepository.countByDateRange(previousStart, previousEnd);
-        List<Object[]> previousData = transactionRepository.findTransactionsByTypeGrouped(previousStart, previousEnd);
+        long previousTransactions = admin ?
+                transactionRepository.countByDateRange(previousStart, previousEnd) :
+                transactionRepository.countByDateRangeAndCustomer(previousStart, previousEnd, customerId);
+        List<Object[]> previousData = admin ?
+                transactionRepository.findTransactionsByTypeGrouped(previousStart, previousEnd) :
+                transactionRepository.findTransactionsByTypeGroupedForCustomer(previousStart, previousEnd, customerId);
         BigDecimal previousVolume = BigDecimal.ZERO;
         for (Object[] row : previousData) {
             BigDecimal amount = row[2] != null ? new BigDecimal(row[2].toString()) : BigDecimal.ZERO;
             previousVolume = previousVolume.add(amount);
         }
-        long previousActiveUsers = userRepository.countActiveUsersByDateRange(previousStart, previousEnd);
+        long previousActiveUsers = admin ?
+                userRepository.countActiveUsersByDateRange(previousStart, previousEnd) : 1;
 
         // Calcular cambios porcentuales
         Double transactionChangePercent = previousTransactions > 0 ?

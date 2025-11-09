@@ -1,12 +1,15 @@
 package com.fintech.exception;
 
 import com.fintech.dto.response.ErrorResponse;
+import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentConversionNotSupportedException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -73,8 +76,89 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
     }
 
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+        String paramName = ex.getName();
+        String paramValue = ex.getValue() != null ? ex.getValue().toString() : "null";
+
+        String message = String.format(
+            "Invalid date for parameter '%s': %s. Use format YYYY-MM-DD and verify the date is valid (e.g., November has 30 days, not 31)",
+            paramName, paramValue
+        );
+
+        ErrorResponse error = new ErrorResponse(message, HttpStatus.BAD_REQUEST.value());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(org.springframework.beans.TypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleBeanTypeMismatch(
+            org.springframework.beans.TypeMismatchException ex) {
+        String message = "Invalid parameter value. Expected format for dates: YYYY-MM-DD";
+
+        // Extraer el nombre del parámetro y valor del mensaje de error
+        String errorMsg = ex.getMessage();
+        if (errorMsg != null) {
+            // Buscar el valor en el mensaje
+            if (errorMsg.contains("value [") && errorMsg.contains("]")) {
+                int start = errorMsg.indexOf("value [") + 7;
+                int end = errorMsg.indexOf("]", start);
+                if (end > start) {
+                    String value = errorMsg.substring(start, end);
+                    message = String.format("Invalid date value: %s. Expected format: YYYY-MM-DD (e.g., 2025-11-30). Please verify the date is valid.", value);
+                }
+            }
+        }
+
+        ErrorResponse error = new ErrorResponse(message, HttpStatus.BAD_REQUEST.value());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(ConversionFailedException.class)
+    public ResponseEntity<ErrorResponse> handleConversionFailed(ConversionFailedException ex) {
+        String message = "Invalid date format. Expected format: YYYY-MM-DD (e.g., 2025-11-30)";
+
+        // Intentar extraer el valor inválido
+        if (ex.getValue() != null) {
+            String value = ex.getValue().toString();
+            message = String.format("Invalid date value: %s. Expected format: YYYY-MM-DD. Please verify the date is valid (e.g., November has 30 days, not 31).", value);
+        }
+
+        ErrorResponse error = new ErrorResponse(message, HttpStatus.BAD_REQUEST.value());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(MethodArgumentConversionNotSupportedException.class)
+    public ResponseEntity<ErrorResponse> handleMethodArgumentConversionNotSupported(
+            MethodArgumentConversionNotSupportedException ex) {
+        String message = String.format("Invalid value for parameter '%s'. Expected format for dates: YYYY-MM-DD",
+                ex.getName());
+        ErrorResponse error = new ErrorResponse(message, HttpStatus.BAD_REQUEST.value());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneralException(Exception ex) {
+        // Log the full exception for debugging
+        String errorMessage = ex.getMessage();
+
+        // Si el error es sobre conversión de fechas, dar un mensaje más claro
+        if (errorMessage != null && errorMessage.contains("Failed to convert") &&
+            errorMessage.contains("LocalDate") && errorMessage.contains("value [")) {
+
+            // Extraer el valor inválido del mensaje
+            int start = errorMessage.lastIndexOf("value [") + 7;
+            int end = errorMessage.indexOf("]", start);
+            if (end > start && start > 6) {
+                String invalidValue = errorMessage.substring(start, end);
+                String message = String.format(
+                    "Invalid date: %s. Use format YYYY-MM-DD and verify the date is valid (e.g., November has 30 days, not 31)",
+                    invalidValue
+                );
+                ErrorResponse error = new ErrorResponse(message, HttpStatus.BAD_REQUEST.value());
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+            }
+        }
+
         ErrorResponse error = new ErrorResponse(
                 "Internal server error: " + ex.getMessage(),
                 HttpStatus.INTERNAL_SERVER_ERROR.value()

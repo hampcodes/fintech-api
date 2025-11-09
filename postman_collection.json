@@ -2081,7 +2081,7 @@
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "{{baseUrl}}/reports/comparison?currentStartDate=2025-11-01&currentEndDate=2025-11-30&previousStartDate=2025-10-01&previousEndDate=2025-10-31",
+									"raw": "{{baseUrl}}/reports/comparison?currentStartDate=2025-02-01&currentEndDate=2025-02-28&previousStartDate=2025-01-01&previousEndDate=2025-01-31",
 									"host": [
 										"{{baseUrl}}"
 									],
@@ -2092,22 +2092,22 @@
 									"query": [
 										{
 											"key": "currentStartDate",
-											"value": "2025-11-01",
+											"value": "2025-02-01",
 											"description": "Fecha inicio período actual"
 										},
 										{
 											"key": "currentEndDate",
-											"value": "2025-11-30",
+											"value": "2025-02-28",
 											"description": "Fecha fin período actual"
 										},
 										{
 											"key": "previousStartDate",
-											"value": "2025-10-01",
+											"value": "2025-01-01",
 											"description": "Fecha inicio período anterior"
 										},
 										{
 											"key": "previousEndDate",
-											"value": "2025-10-31",
+											"value": "2025-01-31",
 											"description": "Fecha fin período anterior"
 										}
 									]

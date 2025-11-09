@@ -68,4 +68,41 @@ public interface AccountRepository extends JpaRepository<Account, String> {
            "ELSE '50000+' END " +
            "ORDER BY MIN(a.balance)")
     List<Object[]> findBalanceDistribution();
+
+    // ==================== MÉTODOS FILTRADOS POR CUSTOMER (para USER role) ====================
+
+    // Suma de balances por customer
+    @Query("SELECT SUM(a.balance) FROM Account a WHERE a.customer.id = :customerId AND a.active = true")
+    Double getTotalBalanceForCustomer(@Param("customerId") String customerId);
+
+    // Promedio de balances por customer
+    @Query("SELECT AVG(a.balance) FROM Account a WHERE a.customer.id = :customerId AND a.active = true")
+    Double getAverageBalanceForCustomer(@Param("customerId") String customerId);
+
+    // Top cuentas del customer por balance
+    @Query("SELECT a FROM Account a WHERE a.customer.id = :customerId AND a.active = true ORDER BY a.balance DESC")
+    List<Account> findTopAccountsByBalanceForCustomer(@Param("customerId") String customerId, Pageable pageable);
+
+    // Distribución de balances del customer
+    @Query("SELECT CASE " +
+           "WHEN a.balance < 1000 THEN '0-1000' " +
+           "WHEN a.balance >= 1000 AND a.balance < 5000 THEN '1000-5000' " +
+           "WHEN a.balance >= 5000 AND a.balance < 10000 THEN '5000-10000' " +
+           "WHEN a.balance >= 10000 AND a.balance < 50000 THEN '10000-50000' " +
+           "ELSE '50000+' END as range, " +
+           "COUNT(a), SUM(a.balance) " +
+           "FROM Account a " +
+           "WHERE a.customer.id = :customerId AND a.active = true " +
+           "GROUP BY CASE " +
+           "WHEN a.balance < 1000 THEN '0-1000' " +
+           "WHEN a.balance >= 1000 AND a.balance < 5000 THEN '1000-5000' " +
+           "WHEN a.balance >= 5000 AND a.balance < 10000 THEN '5000-10000' " +
+           "WHEN a.balance >= 10000 AND a.balance < 50000 THEN '10000-50000' " +
+           "ELSE '50000+' END " +
+           "ORDER BY MIN(a.balance)")
+    List<Object[]> findBalanceDistributionForCustomer(@Param("customerId") String customerId);
+
+    // Contar cuentas activas por customer
+    @Query("SELECT COUNT(a) FROM Account a WHERE a.customer.id = :customerId AND a.active = :active")
+    long countByCustomerIdAndActive(@Param("customerId") String customerId, @Param("active") Boolean active);
 }

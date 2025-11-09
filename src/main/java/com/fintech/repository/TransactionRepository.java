@@ -129,4 +129,65 @@ public interface TransactionRepository extends JpaRepository<Transaction, String
             @Param("endDate") LocalDateTime endDate,
             Pageable pageable
     );
+
+    // ==================== MÉTODOS FILTRADOS POR CUSTOMER (para USER role) ====================
+
+    // Contar transacciones por customer
+    @Query("SELECT COUNT(t) FROM Transaction t WHERE t.account.customer.id = :customerId " +
+           "AND t.timestamp BETWEEN :startDate AND :endDate")
+    long countByDateRangeAndCustomer(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            @Param("customerId") String customerId
+    );
+
+    // Contar transacciones por tipo y customer
+    @Query("SELECT COUNT(t) FROM Transaction t WHERE t.type = :type " +
+           "AND t.account.customer.id = :customerId " +
+           "AND t.timestamp BETWEEN :startDate AND :endDate")
+    long countByTypeAndDateRangeAndCustomer(
+            @Param("type") TransactionType type,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            @Param("customerId") String customerId
+    );
+
+    // Transacciones agrupadas por fecha (filtrado por customer)
+    @Query("SELECT DATE(t.timestamp) as date, COUNT(t) as count, SUM(t.amount) as total " +
+           "FROM Transaction t " +
+           "WHERE t.account.customer.id = :customerId " +
+           "AND t.timestamp BETWEEN :startDate AND :endDate " +
+           "GROUP BY DATE(t.timestamp) " +
+           "ORDER BY DATE(t.timestamp)")
+    List<Object[]> findTransactionsByDateGroupedForCustomer(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            @Param("customerId") String customerId
+    );
+
+    // Transacciones agrupadas por tipo (filtrado por customer)
+    @Query("SELECT t.type, COUNT(t), SUM(t.amount) " +
+           "FROM Transaction t " +
+           "WHERE t.account.customer.id = :customerId " +
+           "AND t.timestamp BETWEEN :startDate AND :endDate " +
+           "GROUP BY t.type")
+    List<Object[]> findTransactionsByTypeGroupedForCustomer(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            @Param("customerId") String customerId
+    );
+
+    // Top cuentas del customer por transacciones
+    @Query("SELECT t.account.accountNumber, t.account.customer.name, COUNT(t), SUM(t.amount) " +
+           "FROM Transaction t " +
+           "WHERE t.account.customer.id = :customerId " +
+           "AND t.timestamp BETWEEN :startDate AND :endDate " +
+           "GROUP BY t.account.accountNumber, t.account.customer.name " +
+           "ORDER BY COUNT(t) DESC")
+    List<Object[]> findTopAccountsByTransactionCountForCustomer(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            @Param("customerId") String customerId,
+            Pageable pageable
+    );
 }

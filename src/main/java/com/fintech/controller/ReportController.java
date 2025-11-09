@@ -19,7 +19,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/reports")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('ADMIN')")
 public class ReportController {
 
     private final ReportService reportService;
@@ -27,6 +26,7 @@ public class ReportController {
     // ==================== 1. REPORTES DE TRANSACCIONES ====================
 
     @Operation(summary = "Obtener reporte de transacciones por período (para gráficos de líneas/barras)")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @GetMapping("/transactions/by-period")
     public ResponseEntity<List<TransactionReportDTO>> getTransactionReportByPeriod(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
@@ -38,6 +38,7 @@ public class ReportController {
     }
 
     @Operation(summary = "Obtener transacciones agrupadas por tipo (para gráfico de pie/dona)")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @GetMapping("/transactions/by-type")
     public ResponseEntity<List<TransactionByTypeDTO>> getTransactionsByType(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
@@ -49,6 +50,7 @@ public class ReportController {
     }
 
     @Operation(summary = "Obtener top cuentas por cantidad de transacciones")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @GetMapping("/transactions/top-accounts")
     public ResponseEntity<List<TransactionByAccountDTO>> getTopAccountsByTransactionCount(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
@@ -63,6 +65,7 @@ public class ReportController {
     // ==================== 2. REPORTES DE CUENTAS ====================
 
     @Operation(summary = "Obtener distribución de saldos por rangos (para histogramas)")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @GetMapping("/accounts/balance-distribution")
     public ResponseEntity<List<BalanceDistributionDTO>> getBalanceDistribution() {
         List<BalanceDistributionDTO> report = reportService.getBalanceDistribution();
@@ -70,6 +73,7 @@ public class ReportController {
     }
 
     @Operation(summary = "Obtener top cuentas por saldo")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @GetMapping("/accounts/top-by-balance")
     public ResponseEntity<List<TopAccountsByBalanceDTO>> getTopAccountsByBalance(
             @RequestParam(defaultValue = "10") int limit) {
@@ -80,6 +84,7 @@ public class ReportController {
     // ==================== 3. REPORTES DE ACTIVIDAD DE USUARIOS ====================
 
     @Operation(summary = "Obtener usuarios más activos por transacciones")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @GetMapping("/users/top-by-activity")
     public ResponseEntity<List<UserActivityDTO>> getTopUsersByActivity(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
@@ -92,6 +97,7 @@ public class ReportController {
     }
 
     @Operation(summary = "Obtener crecimiento de usuarios por período")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @GetMapping("/users/growth")
     public ResponseEntity<List<UserGrowthDTO>> getUserGrowthByPeriod(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
@@ -105,6 +111,7 @@ public class ReportController {
     // ==================== 4. DASHBOARD GENERAL ====================
 
     @Operation(summary = "Obtener métricas del dashboard principal")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @GetMapping("/dashboard")
     public ResponseEntity<DashboardMetricsDTO> getDashboardMetrics() {
         DashboardMetricsDTO metrics = reportService.getDashboardMetrics();
@@ -115,6 +122,7 @@ public class ReportController {
 
     @Operation(summary = "Comparar dos períodos de tiempo",
             description = "Compara métricas entre dos períodos. Útil para comparar mes actual vs anterior, semana actual vs anterior, etc.")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @GetMapping("/comparison")
     public ResponseEntity<PeriodComparisonDTO> getPeriodComparison(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate currentStartDate,
@@ -134,6 +142,7 @@ public class ReportController {
     // ==================== ENDPOINTS HELPER PARA REPORTES RÁPIDOS ====================
 
     @Operation(summary = "Obtener reportes del mes actual")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @GetMapping("/current-month")
     public ResponseEntity<List<TransactionReportDTO>> getCurrentMonthReport() {
         LocalDate now = LocalDate.now();
@@ -145,6 +154,7 @@ public class ReportController {
     }
 
     @Operation(summary = "Obtener reportes de la semana actual")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @GetMapping("/current-week")
     public ResponseEntity<List<TransactionReportDTO>> getCurrentWeekReport() {
         LocalDate now = LocalDate.now();
@@ -156,6 +166,7 @@ public class ReportController {
     }
 
     @Operation(summary = "Obtener reportes de hoy")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @GetMapping("/today")
     public ResponseEntity<List<TransactionReportDTO>> getTodayReport() {
         LocalDate now = LocalDate.now();
