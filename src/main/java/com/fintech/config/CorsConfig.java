@@ -21,7 +21,8 @@ public class CorsConfig {
         // Orígenes permitidos (en producción, especificar dominios exactos)
         configuration.setAllowedOrigins(Arrays.asList(
             "http://localhost:3000",    // React dev server
-            "http://localhost:4200"     // Angular dev server
+            "http://localhost:4200",   // Angular dev server
+            "https://fintech-app-iota.vercel.app/" // Frontend  enproducción
         ));
 
         // Métodos HTTP permitidos
